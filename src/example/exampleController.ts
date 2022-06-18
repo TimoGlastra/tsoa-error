@@ -1,50 +1,48 @@
 import { Body, Controller, Post, Route } from "tsoa";
 
-export interface Format {
+interface Payload {
   key: string;
-  value: unknown;
+  payload: unknown;
 }
 
-export interface ExampleFormat extends Format {
-  key: "example";
-  value: {
-    theValue: string;
+export interface ThePayload extends Payload {
+  key: "theKey";
+  payload: {
+    thePayload: string;
   };
 }
 
-interface CreateUserRequest {
-  formats: FormatPayload<[ExampleFormat]>;
+type PayloadMap<Payloads extends Payload[]> = {
+  [Payload in Payloads[number] as Payload["key"]]?: Payload["payload"];
+};
+
+type PayloadTypes = [ThePayload];
+
+// Use generic, pass payloads using payload array
+export interface TheRequestBodyWithGeneric<Payloads extends Payload[]> {
+  payloadData: PayloadMap<Payloads>;
 }
 
-/**
- * Get the payload from a list of Format interfaces
- *
- * @example
- * ```
- *
- * type CreateOfferFormat = FormatPayload<[ExampleFormat]>
- *
- * // equal to
- * type CreateOfferFormat = {
- *  example: {
- *   theValue: string;
- *  }
- * }
- * ```
- */
-export declare type FormatPayload<Fs extends Format[]> = {
-  [Format in Fs[number] as Format["key"]]?: Format["value"];
-};
+// Do not use generic, pass PayloadTypes directly
+export interface TheRequestBodyWithoutGeneric {
+  payloadData: PayloadMap<PayloadTypes>;
+}
 
 @Route("example")
 export class ExampleController extends Controller {
-  @Post()
-  public async createUser(
+  @Post("with-generic")
+  public async withGeneric(
     @Body()
-    requestBody: CreateUserRequest
+    requestBody: TheRequestBodyWithGeneric<PayloadTypes>
   ) {
     console.log(requestBody);
+  }
 
-    return 10;
+  @Post("without-generic")
+  public async withoutGeneric(
+    @Body()
+    requestBody: TheRequestBodyWithoutGeneric
+  ) {
+    console.log(requestBody);
   }
 }
