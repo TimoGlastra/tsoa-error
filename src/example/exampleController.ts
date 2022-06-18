@@ -1,36 +1,28 @@
 import { Body, Controller, Post, Route } from "tsoa";
+import { Agent } from "@aries-framework/core";
+import { IndyCredentialFormat } from "@aries-framework/core/build/modules/credentials/formats/indy/IndyCredentialFormat";
+import { CredentialFormatPayload } from "@aries-framework/core/build/modules/credentials/formats";
+import { V1CredentialService } from "@aries-framework/core/build/modules/credentials/protocol/v1/V1CredentialService";
+import { V2CredentialService } from "@aries-framework/core/build/modules/credentials/protocol/v2/V2CredentialService";
 
-interface Payload {
-  key: string;
-  payload: unknown;
-}
+type CredentialFormats = [IndyCredentialFormat];
+type CredentialServices = [V1CredentialService, V2CredentialService];
 
-export interface ThePayload extends Payload {
-  key: "theKey";
-  payload: {
-    thePayload: string;
-  };
-}
-
-type PayloadMap<Payloads extends Payload[]> = {
-  [Payload in Payloads[number] as Payload["key"]]?: Payload["payload"];
-};
-
-type PayloadTypes = [ThePayload];
-
-// To make this work, remove the `Payloads` generic and pass `PayloadTypes` directly
-// to the `PayloadMap` generic type.
-export interface TheRequestBody<Payloads extends Payload[]> {
-  payloadData: PayloadMap<Payloads>;
+interface OfferCredentialRequest {
+  connectionId: string;
+  credentialFormats: CredentialFormatPayload<CredentialFormats, "createOffer">;
+  protocolVersion: CredentialServices[number]["version"];
 }
 
 @Route("example")
 export class ExampleController extends Controller {
+  private agent!: Agent;
+
   @Post()
   public async method(
     @Body()
-    requestBody: TheRequestBody<PayloadTypes>
+    body: OfferCredentialRequest
   ) {
-    console.log(requestBody);
+    await this.agent.credentials.offerCredential(body);
   }
 }
