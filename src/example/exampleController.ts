@@ -18,30 +18,18 @@ type PayloadMap<Payloads extends Payload[]> = {
 
 type PayloadTypes = [ThePayload];
 
-// Use generic, pass payloads using payload array
-export interface TheRequestBodyWithGeneric<Payloads extends Payload[]> {
+// To make this work, remove the `Payloads` generic and pass `PayloadTypes` directly
+// to the `PayloadMap` generic type.
+export interface TheRequestBody<Payloads extends Payload[]> {
   payloadData: PayloadMap<Payloads>;
-}
-
-// Do not use generic, pass PayloadTypes directly
-export interface TheRequestBodyWithoutGeneric {
-  payloadData: PayloadMap<PayloadTypes>;
 }
 
 @Route("example")
 export class ExampleController extends Controller {
-  @Post("with-generic")
-  public async withGeneric(
+  @Post()
+  public async method(
     @Body()
-    requestBody: TheRequestBodyWithGeneric<PayloadTypes>
-  ) {
-    console.log(requestBody);
-  }
-
-  @Post("without-generic")
-  public async withoutGeneric(
-    @Body()
-    requestBody: TheRequestBodyWithoutGeneric
+    requestBody: TheRequestBody<PayloadTypes>
   ) {
     console.log(requestBody);
   }
